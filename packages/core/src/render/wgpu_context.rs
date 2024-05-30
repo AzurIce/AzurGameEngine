@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use wgpu::{DeviceDescriptor, InstanceDescriptor, PipelineLayoutDescriptor, RenderPipeline, RequestAdapterOptions, SurfaceConfiguration};
+use wgpu::{
+    DeviceDescriptor, InstanceDescriptor, PipelineLayoutDescriptor, RenderPipeline,
+    RequestAdapterOptions, SurfaceConfiguration,
+};
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::pipeline::{AzurPipeline, Pipeline};
@@ -11,12 +14,11 @@ pub struct WgpuContext {
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
 
-    pub pipeline: Option<RenderPipeline>
-    // pub size: winit::dpi::PhysicalSize<u32>,
-    // pub egui_dev: EguiDev,
-    // pub egui_rpass: egui_wgpu_backend::RenderPass,
-    // shaders: HashMap<&'static str, ShaderModule>,
-    // _textures: HashMap<&'static str, (Texture, BindGroup, BindGroupLayout)>,
+    pub pipeline: Option<RenderPipeline>, // pub size: winit::dpi::PhysicalSize<u32>,
+                                          // pub egui_dev: EguiDev,
+                                          // pub egui_rpass: egui_wgpu_backend::RenderPass,
+                                          // shaders: HashMap<&'static str, ShaderModule>,
+                                          // _textures: HashMap<&'static str, (Texture, BindGroup, BindGroupLayout)>,
 }
 
 impl WgpuContext {
@@ -58,8 +60,7 @@ impl WgpuContext {
             .formats
             .iter()
             .copied()
-            .filter(|f| f.is_srgb())
-            .next()
+            .find(|f| f.is_srgb())
             .unwrap_or(surface_caps.formats[0]);
 
         let config = SurfaceConfiguration {
@@ -85,7 +86,7 @@ impl WgpuContext {
             device,
             queue,
             config,
-            pipeline: None
+            pipeline: None,
         };
 
         let pipeline = AzurPipeline.get(&context, render_pipeline_layout);

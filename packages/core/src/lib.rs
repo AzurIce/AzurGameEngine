@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use wgpu::Surface;
 use winit::{dpi::PhysicalSize, window::Window};
 
 pub mod pipeline;
