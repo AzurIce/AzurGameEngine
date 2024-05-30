@@ -1,33 +1,29 @@
-use std::sync::Arc;
+use std::{cell::RefCell, sync::Arc};
 
+use render::{pipeline::CubePipeline, Renderer};
 use winit::{dpi::PhysicalSize, window::Window};
 
-pub mod pipeline;
+pub mod entity;
 pub mod render;
 pub mod runtime;
 
 pub struct Core {
-    ctx: render::wgpu_context::WgpuContext,
+    renderer: render::Renderer,
 }
 
 impl Core {
     pub fn new(window: Arc<Window>) -> Self {
-        let ctx = pollster::block_on(render::wgpu_context::WgpuContext::new(window));
-        Core { ctx }
+        let renderer = Renderer::new(window);
+        Core { renderer }
     }
 
-    pub fn handle_resize(&mut self, mut size: PhysicalSize<u32>) {
-        size.width = size.width.max(1);
-        size.height = size.height.max(1);
-        println!("[core]: handle_resize: {size:?}");
-        self.ctx.update_size(size);
-        // self.ctx.handle_resize();
+    pub fn handle_resize(&mut self, size: PhysicalSize<u32>) {
+        self.renderer.handle_resize(size);
     }
 }
 
 impl Core {
     pub fn render(&self) {
-        println!("[core]: render");
-        self.ctx.render().unwrap();
+        self.renderer.render();
     }
 }

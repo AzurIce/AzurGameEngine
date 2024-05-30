@@ -8,3 +8,4 @@ bytemuck.workspace = true
 pollster.workspace = true
 wgpu.workspace = true
 winit.workspace = true
+glam = "0.27.0"

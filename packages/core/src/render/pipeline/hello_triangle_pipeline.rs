@@ -1,15 +1,20 @@
-use wgpu::{PipelineCompilationOptions, PipelineLayout, RenderPipeline};
+use wgpu::{PipelineCompilationOptions, PipelineLayoutDescriptor, RenderPipeline};
 
 use crate::render::wgpu_context::WgpuContext;
+use super::Pipeline;
 
-pub trait Pipeline {
-    fn get(&self, context: &WgpuContext, layout: PipelineLayout) -> RenderPipeline;
-}
+pub struct HelloTrianglePipeline;
 
-pub struct AzurPipeline;
+impl Pipeline for HelloTrianglePipeline {
+    fn create(context: &WgpuContext) -> Box<RenderPipeline> {
+        // ? Pipeline layout
+        let pipeline_layout = context.device.create_pipeline_layout(&PipelineLayoutDescriptor {
+            label: Some("Render Pipeline Layout"),
+            bind_group_layouts: &[],
+            push_constant_ranges: &[],
+        });
 
-impl Pipeline for AzurPipeline {
-    fn get(&self, context: &WgpuContext, layout: PipelineLayout) -> RenderPipeline {
+        // ? Shader module
         let shader_module = context
             .device
             .create_shader_module(wgpu::include_wgsl!("../shaders/shader.wgsl"));
@@ -18,9 +23,9 @@ impl Pipeline for AzurPipeline {
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: None,
-                layout: Some(&layout),
+                layout: Some(&pipeline_layout), // ? Pipeline layout
                 vertex: wgpu::VertexState {
-                    module: &shader_module,
+                    module: &shader_module, // ? Shader module
                     entry_point: "vs_main",
                     buffers: &[],
                     compilation_options: PipelineCompilationOptions {
@@ -28,7 +33,7 @@ impl Pipeline for AzurPipeline {
                     },
                 },
                 fragment: Some(wgpu::FragmentState {
-                    module: &shader_module,
+                    module: &shader_module, // ? Shader modyle
                     entry_point: "fs_main",
                     targets: &[Some(wgpu::ColorTargetState {
                         format: context.config.format,
@@ -56,6 +61,6 @@ impl Pipeline for AzurPipeline {
                 multiview: None,
             });
 
-        pipeline
+        Box::new(pipeline)
     }
 }

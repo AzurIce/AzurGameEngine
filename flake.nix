@@ -46,11 +46,13 @@
           ] ++ [
             rust-tools
           ] ++ (with pkgs.darwin.apple_sdk.frameworks; pkgs.lib.optionals pkgs.stdenv.isDarwin [
+            QuartzCore
+            Carbon
             # System
             # IOKit
             # Security
             # CoreFoundation
-            # AppKit
+            AppKit
           ]);
         };
       }
