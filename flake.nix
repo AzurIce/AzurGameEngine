@@ -25,7 +25,7 @@
           inherit system overlays;
         };
         rust-tools = pkgs.rust-bin.stable.latest.default.override {
-          extensions = [ "rust-src" ];
+          extensions = [ "rust-src" "clippy" ];
         };
       in
       {
@@ -46,7 +46,6 @@
           ] ++ [
             rust-tools
           ] ++ (with pkgs.darwin.apple_sdk.frameworks; pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            ApplicationServices
             # System
             # IOKit
             # Security
