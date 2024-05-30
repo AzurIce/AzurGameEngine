@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Instant;
 
 use azurge_core::Core;
 
@@ -11,6 +12,7 @@ use winit::window::{Window, WindowId};
 struct App {
     window: Option<Arc<Window>>,
     core: Option<Core>,
+    last_tick: Option<Instant>,
 }
 
 impl ApplicationHandler for App {
@@ -21,7 +23,7 @@ impl ApplicationHandler for App {
         let window = Arc::new(window);
 
         let core = Core::new(window.clone());
-        window.request_redraw();
+        // window.request_redraw();
 
         self.window = Some(window);
         self.core = Some(core)
@@ -34,14 +36,27 @@ impl ApplicationHandler for App {
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {
+                let time_delta = self.last_tick.unwrap_or(Instant::now()).elapsed();
+                self.last_tick = Some(Instant::now());
+                self.core.as_mut().unwrap().tick(time_delta);
                 self.core.as_ref().unwrap().render();
             }
             WindowEvent::Resized(size) => {
                 self.core.as_mut().unwrap().handle_resize(size);
-                self.window.as_ref().unwrap().request_redraw();
+                // self.window.as_ref().unwrap().request_redraw();
+            }
+            WindowEvent::KeyboardInput { .. }
+            | WindowEvent::CursorMoved { .. }
+            | WindowEvent::MouseInput { .. } => {
+                self.core.as_mut().unwrap().handle_input_event(event);
+                // self.window.as_ref().unwrap().request_redraw();
             }
             _ => (),
         }
+    }
+
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        self.window.as_ref().unwrap().request_redraw();
     }
 }
 

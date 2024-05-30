@@ -1,9 +1,11 @@
 pub mod pipeline;
 pub mod wgpu_context;
+pub mod camera;
 // pub mod resource;
 
 use std::{cell::RefCell, sync::Arc};
 
+use camera::Camera;
 use pipeline::CubePipeline;
 use wgpu_context::WgpuContext;
 use winit::{dpi::PhysicalSize, window::Window};
@@ -28,13 +30,13 @@ impl Renderer {
         self.ctx.update_size(size);
     }
 
-    pub fn render(&self) {
-        println!("[core]: render");
+    pub fn render(&self, camera: &Camera) {
+        // println!("[core]: render");
         let output = self.ctx.surface.get_current_texture().unwrap();
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        self.pipeline.borrow_mut().render(&self.ctx, &view);
+        self.pipeline.borrow_mut().render(&self.ctx, &view, camera);
         output.present();
     }
 }

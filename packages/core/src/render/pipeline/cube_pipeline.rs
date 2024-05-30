@@ -8,7 +8,7 @@ use wgpu::{
 use super::Pipeline;
 use crate::{
     entity::{Vertex, CUBE_VERTEX, CUBE_VERTEX_INDEX},
-    render::wgpu_context::WgpuContext,
+    render::{camera::Camera, wgpu_context::WgpuContext},
 };
 
 fn create_texels(size: usize) -> Vec<u8> {
@@ -224,7 +224,7 @@ impl CubePipeline {
         }
     }
 
-    pub fn render(&mut self, context: &WgpuContext, view: &wgpu::TextureView) {
+    pub fn render(&mut self, context: &WgpuContext, view: &wgpu::TextureView, camera: &Camera) {
         {
             // TODO: move these things out of [`render`] to optimize performance (maybe add a method called [`update`]?)
             context
@@ -236,8 +236,8 @@ impl CubePipeline {
                 bytemuck::cast_slice(&CUBE_VERTEX_INDEX),
             );
 
-            let mx_total =
-                generate_matrix(context.config.width as f32 / context.config.height as f32);
+            // let mx_total = generate_matrix(context.config.width as f32 / context.config.height as f32);
+            let mx_total = camera.view_projection_mat();
             let mx_ref: &[f32; 16] = mx_total.as_ref();
             context
                 .queue
