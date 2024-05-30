@@ -1,0 +1,9 @@
+[workspace]
+members = ["packages/*"]
+
+[workspace.dependencies]
+azurge-core = { path = "packages/core" }
+bytemuck = "1.16.0"
+pollster = "0.3.0"
+wgpu = "0.20.0"
+winit = "0.30.0"
