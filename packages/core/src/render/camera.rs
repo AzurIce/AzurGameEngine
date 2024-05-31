@@ -18,7 +18,6 @@ pub struct Camera {
     up: glam::Vec3,
     forward: glam::Vec3,
 
-
     view_mat: glam::Mat4,
     projection_mat: glam::Mat4,
     view_projection_mat: glam::Mat4,
@@ -94,7 +93,8 @@ impl Camera {
 
     pub fn set_ratio(&mut self, ratio: f32) {
         self.aspect = ratio;
-        self.projection_mat = glam::Mat4::perspective_rh(self.fov, self.aspect, self.near, self.far);
+        self.projection_mat =
+            glam::Mat4::perspective_rh(self.fov, self.aspect, self.near, self.far);
         self.view_projection_mat = self.projection_mat * self.view_mat;
     }
 

@@ -1,18 +1,20 @@
 use wgpu::{PipelineCompilationOptions, PipelineLayoutDescriptor, RenderPipeline};
 
-use crate::render::wgpu_context::WgpuContext;
 use super::Pipeline;
+use crate::render::wgpu_context::WgpuContext;
 
 pub struct HelloTrianglePipeline;
 
 impl Pipeline for HelloTrianglePipeline {
     fn create(context: &WgpuContext) -> Box<RenderPipeline> {
         // ? Pipeline layout
-        let pipeline_layout = context.device.create_pipeline_layout(&PipelineLayoutDescriptor {
-            label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[],
-            push_constant_ranges: &[],
-        });
+        let pipeline_layout = context
+            .device
+            .create_pipeline_layout(&PipelineLayoutDescriptor {
+                label: Some("Render Pipeline Layout"),
+                bind_group_layouts: &[],
+                push_constant_ranges: &[],
+            });
 
         // ? Shader module
         let shader_module = context

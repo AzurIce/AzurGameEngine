@@ -30,14 +30,19 @@ impl Core {
         );
 
         let input_system = InputSystem::default();
-        Core { renderer, camera, input_system }
+        Core {
+            renderer,
+            camera,
+            input_system,
+        }
     }
 
     pub fn handle_resize(&mut self, size: PhysicalSize<u32>) {
         self.renderer.handle_resize(size);
-        self.camera.set_ratio(size.width as f32 / size.height as f32);
+        self.camera
+            .set_ratio(size.width as f32 / size.height as f32);
     }
-    
+
     pub fn handle_input_event(&mut self, event: WindowEvent) {
         match event {
             WindowEvent::KeyboardInput { event, .. } => {
@@ -51,13 +56,16 @@ impl Core {
             }
             _ => (),
         }
-    
     }
 }
 
 impl Core {
     pub fn tick(&mut self, delta_time: Duration) {
-        self.camera.tick(delta_time, self.input_system.game_command(), self.input_system.cursor_delta());
+        self.camera.tick(
+            delta_time,
+            self.input_system.game_command(),
+            self.input_system.cursor_delta(),
+        );
         self.input_system.reset_cursor_delta();
     }
 

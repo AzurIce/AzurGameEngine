@@ -1,14 +1,13 @@
 use super::primitive::mesh::Mesh;
 
+#[derive(Default)]
 pub struct Scene {
-    meshes: Vec<Mesh>
+    meshes: Vec<Mesh>,
 }
 
 impl Scene {
     pub fn new() -> Self {
-        Self {
-            meshes: Vec::new()
-        }
+        Self { meshes: Vec::new() }
     }
 
     pub fn meshes(&self) -> &Vec<Mesh> {
