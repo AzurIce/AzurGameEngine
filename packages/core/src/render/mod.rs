@@ -8,7 +8,7 @@ pub mod wgpu_context;
 use std::{cell::RefCell, sync::Arc};
 
 use camera::Camera;
-use pipeline::CubePipeline;
+use pipeline::{CubePipeline, HelloTrianglePipeline, Pipeline};
 use scene::Scene;
 use wgpu_context::WgpuContext;
 use winit::{dpi::PhysicalSize, window::Window};
@@ -17,20 +17,20 @@ use primitive::{mesh::Mesh, CUBE_VERTEX, CUBE_VERTEX_INDEX};
 
 pub struct Renderer {
     ctx: WgpuContext,
-    pub pipeline: RefCell<CubePipeline>,
+    pub pipeline: RefCell<Box<dyn Pipeline>>,
     scene: Scene,
 }
 
 impl Renderer {
     pub fn new(window: Arc<Window>) -> Self {
         let ctx = pollster::block_on(WgpuContext::new(window));
-        let pipeline = CubePipeline::new(&ctx);
-        let pipeline = RefCell::new(pipeline);
+        // let pipeline = CubePipeline::new(&ctx);
+        let pipeline = HelloTrianglePipeline::new(&ctx);
         let mut scene = Scene::new();
         scene.add_mesh(Mesh::new(&ctx, &CUBE_VERTEX, CUBE_VERTEX_INDEX));
         Self {
             ctx,
-            pipeline,
+            pipeline: RefCell::new(Box::new(pipeline)),
             scene,
         }
     }

@@ -55,8 +55,8 @@ pub trait Render {
     fn index_buf() -> Buffer;
 }
 
-impl CubePipeline {
-    pub fn new(context: &WgpuContext) -> Self {
+impl Pipeline for CubePipeline {
+    fn new(context: &WgpuContext) -> Self {
         // ? Bind group layout
         let bind_group_layout =
             context
@@ -169,7 +169,7 @@ impl CubePipeline {
         // ? Shader module
         let shader_module = context
             .device
-            .create_shader_module(wgpu::include_wgsl!("../shaders/shader.wgsl"));
+            .create_shader_module(wgpu::include_wgsl!("../shaders/cube_pipeline/shader.wgsl"));
 
         let vertex_size = std::mem::size_of::<Vertex>();
         let vertex_buffer_layout = wgpu::VertexBufferLayout {
@@ -231,7 +231,7 @@ impl CubePipeline {
         }
     }
 
-    pub fn render(
+    fn render(
         &mut self,
         context: &WgpuContext,
         view: &wgpu::TextureView,
@@ -292,67 +292,5 @@ impl CubePipeline {
         for mesh in scene.meshes() {
             render_mesh(mesh);
         }
-    }
-}
-
-impl Pipeline for CubePipeline {
-    fn create(context: &WgpuContext) -> Box<RenderPipeline> {
-        // ? Pipeline layout
-        let pipeline_layout = context
-            .device
-            .create_pipeline_layout(&PipelineLayoutDescriptor {
-                label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[],
-                push_constant_ranges: &[],
-            });
-
-        // ? Shader module
-        let shader_module = context
-            .device
-            .create_shader_module(wgpu::include_wgsl!("../shaders/shader.wgsl"));
-
-        let pipeline = context
-            .device
-            .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: None,
-                layout: Some(&pipeline_layout), // ? Pipeline layout
-                vertex: wgpu::VertexState {
-                    module: &shader_module, // ? Shader module
-                    entry_point: "vs_main",
-                    buffers: &[],
-                    compilation_options: PipelineCompilationOptions {
-                        ..Default::default()
-                    },
-                },
-                fragment: Some(wgpu::FragmentState {
-                    module: &shader_module, // ? Shader modyle
-                    entry_point: "fs_main",
-                    targets: &[Some(wgpu::ColorTargetState {
-                        format: context.config.format,
-                        blend: Some(wgpu::BlendState::REPLACE),
-                        write_mask: wgpu::ColorWrites::ALL,
-                    })],
-                    compilation_options: PipelineCompilationOptions {
-                        ..Default::default()
-                    },
-                }),
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::TriangleList,
-                    strip_index_format: None,
-                    front_face: wgpu::FrontFace::Ccw,
-                    cull_mode: Some(wgpu::Face::Back),
-                    polygon_mode: wgpu::PolygonMode::Fill,
-                    ..Default::default()
-                },
-                depth_stencil: None,
-                multisample: wgpu::MultisampleState {
-                    count: 1,
-                    mask: !0,
-                    alpha_to_coverage_enabled: false,
-                },
-                multiview: None,
-            });
-
-        Box::new(pipeline)
     }
 }

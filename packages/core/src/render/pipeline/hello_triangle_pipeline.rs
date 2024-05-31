@@ -3,10 +3,12 @@ use wgpu::{PipelineCompilationOptions, PipelineLayoutDescriptor, RenderPipeline}
 use super::Pipeline;
 use crate::render::wgpu_context::WgpuContext;
 
-pub struct HelloTrianglePipeline;
+pub struct HelloTrianglePipeline {
+    pipeline: RenderPipeline,
+}
 
 impl Pipeline for HelloTrianglePipeline {
-    fn create(context: &WgpuContext) -> Box<RenderPipeline> {
+    fn new(context: &WgpuContext) -> Self {
         // ? Pipeline layout
         let pipeline_layout = context
             .device
@@ -19,7 +21,7 @@ impl Pipeline for HelloTrianglePipeline {
         // ? Shader module
         let shader_module = context
             .device
-            .create_shader_module(wgpu::include_wgsl!("../shaders/shader.wgsl"));
+            .create_shader_module(wgpu::include_wgsl!("../shaders/hello_triangle_pipeline/shader.wgsl"));
 
         let pipeline = context
             .device
@@ -63,6 +65,43 @@ impl Pipeline for HelloTrianglePipeline {
                 multiview: None,
             });
 
-        Box::new(pipeline)
+        Self { pipeline }
+    }
+    fn render(
+        &mut self,
+        context: &WgpuContext,
+        view: &wgpu::TextureView,
+        _camera: &crate::render::camera::Camera,
+        _scene: &crate::render::scene::Scene,
+    ) {
+        let mut encoder = context
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Render Encoder"),
+            });
+
+        {
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                ..Default::default()
+            });
+            render_pass.set_pipeline(&self.pipeline);
+            // render_pass.set_bind_group(0, &fragment_texture_bind_group, &[]);
+            // render_pass.set_bind_group(1, &state_bind_group, &[]);
+            // render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            // render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            // render_pass.draw_indexed(0..3, 0, 0..1);
+            render_pass.draw(0..3, 0..1);
+        }
+
+        context.queue.submit(Some(encoder.finish()));
     }
 }
