@@ -24,8 +24,8 @@ pub struct Renderer {
 impl Renderer {
     pub fn new(window: Arc<Window>) -> Self {
         let ctx = pollster::block_on(WgpuContext::new(window));
-        // let pipeline = CubePipeline::new(&ctx);
-        let pipeline = HelloTrianglePipeline::new(&ctx);
+        let pipeline = CubePipeline::new(&ctx);
+        // let pipeline = HelloTrianglePipeline::new(&ctx);
         let mut scene = Scene::new();
         scene.add_mesh(Mesh::new(&ctx, &CUBE_VERTEX, CUBE_VERTEX_INDEX));
         Self {
