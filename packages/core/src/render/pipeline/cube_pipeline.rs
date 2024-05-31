@@ -1,13 +1,17 @@
 // use std::f32::consts;
 
 use wgpu::{
-    BindGroup, BindGroupLayoutDescriptor, PipelineCompilationOptions,
-    PipelineLayoutDescriptor, RenderPipeline,
+    BindGroup, BindGroupLayoutDescriptor, PipelineCompilationOptions, PipelineLayoutDescriptor,
+    RenderPipeline,
 };
 
 use super::Pipeline;
 use crate::render::{
-    camera::Camera, primitive::{mesh::Mesh, Render, Vertex}, resource::Resource, scene::Scene, wgpu_context::WgpuContext
+    camera::Camera,
+    primitive::{Render, Vertex},
+    resource::Resource,
+    scene::Scene,
+    wgpu_context::WgpuContext,
 };
 
 fn create_texels(size: usize) -> Vec<u8> {
@@ -218,7 +222,7 @@ impl Pipeline for CubePipeline {
         view: &wgpu::TextureView,
         camera: &Camera,
         scene: &Scene,
-        resource: &Resource
+        resource: &Resource,
     ) {
         {
             // TODO: move these things out of [`render`] to optimize performance (maybe add a method called [`update`]?)
@@ -230,7 +234,7 @@ impl Pipeline for CubePipeline {
                 .write_buffer(&self.uniform_buf, 0, bytemuck::cast_slice(mx_ref));
         }
 
-        let render = |renderable: &Box<dyn Render>| {
+        let render = |renderable: &dyn Render| {
             let mut encoder = context
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -272,7 +276,7 @@ impl Pipeline for CubePipeline {
         };
 
         for mesh in scene.meshes() {
-            if let Some(mesh) = resource.get_mesh(&mesh) {
+            if let Some(mesh) = resource.get_mesh(mesh) {
                 render(mesh);
             }
         }

@@ -19,9 +19,9 @@ impl Pipeline for HelloTrianglePipeline {
             });
 
         // ? Shader module
-        let shader_module = context
-            .device
-            .create_shader_module(wgpu::include_wgsl!("../shaders/hello_triangle_pipeline/shader.wgsl"));
+        let shader_module = context.device.create_shader_module(wgpu::include_wgsl!(
+            "../shaders/hello_triangle_pipeline/shader.wgsl"
+        ));
 
         let pipeline = context
             .device
@@ -85,7 +85,7 @@ impl Pipeline for HelloTrianglePipeline {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
+                    view,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),

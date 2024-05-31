@@ -39,10 +39,10 @@ impl Resource {
         );
     }
 
-    pub fn get_pipeline<T: Pipeline + 'static>(&self) -> Option<&Box<dyn Pipeline>> {
-        self.pipelines.get(&TypeId::of::<T>())
+    pub fn get_pipeline<T: Pipeline + 'static>(&self) -> Option<&dyn Pipeline> {
+        self.pipelines.get(&TypeId::of::<T>()).map(|b| &**b)
     }
-    pub fn get_mesh(&self, name: &str) -> Option<&Box<dyn Render>> {
-        self.meshes.get(name)
+    pub fn get_mesh(&self, name: &str) -> Option<&dyn Render> {
+        self.meshes.get(name).map(|b| &**b)
     }
 }

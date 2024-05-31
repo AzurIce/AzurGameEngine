@@ -9,7 +9,9 @@ pub use hello_triangle_pipeline::HelloTrianglePipeline;
 use super::{camera::Camera, resource::Resource, scene::Scene};
 
 pub trait Pipeline {
-    fn new(context: &WgpuContext) -> Self where Self: Sized;
+    fn new(context: &WgpuContext) -> Self
+    where
+        Self: Sized;
 
     fn render(
         &self,
@@ -17,6 +19,6 @@ pub trait Pipeline {
         view: &wgpu::TextureView,
         camera: &Camera,
         scene: &Scene,
-        resource: &Resource
+        resource: &Resource,
     );
 }
