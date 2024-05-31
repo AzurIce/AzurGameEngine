@@ -1,16 +1,13 @@
-use std::f32::consts;
+// use std::f32::consts;
 
 use wgpu::{
-    util::DeviceExt, BindGroup, BindGroupLayoutDescriptor, Buffer, PipelineCompilationOptions,
+    BindGroup, BindGroupLayoutDescriptor, PipelineCompilationOptions,
     PipelineLayoutDescriptor, RenderPipeline,
 };
 
 use super::Pipeline;
 use crate::render::{
-    camera::Camera,
-    primitive::{mesh::Mesh, Vertex},
-    scene::Scene,
-    wgpu_context::WgpuContext,
+    camera::Camera, primitive::{mesh::Mesh, Render, Vertex}, resource::Resource, scene::Scene, wgpu_context::WgpuContext
 };
 
 fn create_texels(size: usize) -> Vec<u8> {
@@ -40,20 +37,15 @@ pub struct CubePipeline {
     uniform_buf: wgpu::Buffer,
 }
 
-fn generate_matrix(aspect_ratio: f32) -> glam::Mat4 {
-    let projection = glam::Mat4::perspective_rh(consts::FRAC_PI_4, aspect_ratio, 1.0, 10.0);
-    let view = glam::Mat4::look_at_rh(
-        glam::Vec3::new(1.5f32, -5.0, 3.0),
-        glam::Vec3::ZERO,
-        glam::Vec3::Z,
-    );
-    projection * view
-}
-
-pub trait Render {
-    fn vertex_buf() -> Buffer;
-    fn index_buf() -> Buffer;
-}
+// fn generate_matrix(aspect_ratio: f32) -> glam::Mat4 {
+//     let projection = glam::Mat4::perspective_rh(consts::FRAC_PI_4, aspect_ratio, 1.0, 10.0);
+//     let view = glam::Mat4::look_at_rh(
+//         glam::Vec3::new(1.5f32, -5.0, 3.0),
+//         glam::Vec3::ZERO,
+//         glam::Vec3::Z,
+//     );
+//     projection * view
+// }
 
 impl Pipeline for CubePipeline {
     fn new(context: &WgpuContext) -> Self {
@@ -127,27 +119,16 @@ impl Pipeline for CubePipeline {
         );
 
         // Create other resources
-        // let vertex_buf = context.device.create_buffer(&wgpu::BufferDescriptor {
-        //     label: Some("Vertex Buffer"),
-        //     size: 3000 * std::mem::size_of::<Vertex>() as u64,
-        //     usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-        //     mapped_at_creation: false,
-        // });
-        // let index_buf = context.device.create_buffer(&wgpu::BufferDescriptor {
-        //     label: Some("Index Buffer"),
-        //     size: 3000 * std::mem::size_of::<u16>() as u64,
-        //     usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-        //     mapped_at_creation: false,
-        // });
-        let mx_total = generate_matrix(context.config.width as f32 / context.config.height as f32);
-        let mx_ref: &[f32; 16] = mx_total.as_ref();
-        let uniform_buf = context
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Uniform Buffer"),
-                contents: bytemuck::cast_slice(mx_ref),
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            });
+        // let (w, h) = context.get_surface_size();
+        // let mx_total = generate_matrix(w as f32 / h as f32);
+        // let mx_ref: &[f32; 16] = mx_total.as_ref();
+        let uniform_buf = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Uniform Buffer"),
+            size: 4 * 4 * std::mem::size_of::<f32>() as u64,
+            // contents: bytemuck::cast_slice(mx_ref),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
 
         let bind_group = context
             .device
@@ -232,11 +213,12 @@ impl Pipeline for CubePipeline {
     }
 
     fn render(
-        &mut self,
+        &self,
         context: &WgpuContext,
         view: &wgpu::TextureView,
         camera: &Camera,
         scene: &Scene,
+        resource: &Resource
     ) {
         {
             // TODO: move these things out of [`render`] to optimize performance (maybe add a method called [`update`]?)
@@ -248,7 +230,7 @@ impl Pipeline for CubePipeline {
                 .write_buffer(&self.uniform_buf, 0, bytemuck::cast_slice(mx_ref));
         }
 
-        let render_mesh = |mesh: &Mesh| {
+        let render = |renderable: &Box<dyn Render>| {
             let mut encoder = context
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -275,11 +257,11 @@ impl Pipeline for CubePipeline {
                 rpass.push_debug_group("Prepare data for draw.");
                 rpass.set_pipeline(&self.pipeline);
                 rpass.set_bind_group(0, &self.bind_group, &[]);
-                rpass.set_index_buffer(mesh.index_buf().slice(..), wgpu::IndexFormat::Uint16);
-                rpass.set_vertex_buffer(0, mesh.vertex_buf().slice(..));
+                rpass.set_index_buffer(renderable.index_buf().slice(..), wgpu::IndexFormat::Uint16);
+                rpass.set_vertex_buffer(0, renderable.vertex_buf().slice(..));
                 rpass.pop_debug_group();
                 rpass.insert_debug_marker("Draw!");
-                rpass.draw_indexed(0..mesh.vertex_cnt() as u32, 0, 0..1);
+                rpass.draw_indexed(0..renderable.vertex_cnt() as u32, 0, 0..1);
                 // if let Some(ref pipe) = self.pipeline_wire {
                 //     rpass.set_pipeline(pipe);
                 //     rpass.draw_indexed(0..self.index_count as u32, 0, 0..1);
@@ -290,7 +272,9 @@ impl Pipeline for CubePipeline {
         };
 
         for mesh in scene.meshes() {
-            render_mesh(mesh);
+            if let Some(mesh) = resource.get_mesh(&mesh) {
+                render(mesh);
+            }
         }
     }
 }

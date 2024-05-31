@@ -1,6 +1,6 @@
-use std::sync::Arc;
+use std::{cell::RefCell, sync::Arc};
 
-use wgpu::{DeviceDescriptor, InstanceDescriptor, RequestAdapterOptions};
+use wgpu::{DeviceDescriptor, InstanceDescriptor, RequestAdapterOptions, TextureFormat};
 use winit::{dpi::PhysicalSize, window::Window};
 
 pub struct WgpuContext {
@@ -8,14 +8,24 @@ pub struct WgpuContext {
     pub adapter: wgpu::Adapter,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
-    pub config: wgpu::SurfaceConfiguration,
+    pub config: RefCell<wgpu::SurfaceConfiguration>,
 }
 
 impl WgpuContext {
-    pub fn update_size(&mut self, size: PhysicalSize<u32>) {
-        self.config.width = size.width;
-        self.config.height = size.height;
-        self.surface.configure(&self.device, &self.config);
+    pub fn get_surface_format(&self) -> TextureFormat {
+        self.config.borrow().format
+    }
+    pub fn get_surface_size(&self) -> (u32, u32) {
+        let config = self.config.borrow();
+        (config.width, config.height)
+    }
+    pub fn update_surface_size(&self, size: PhysicalSize<u32>) {
+        {
+            let mut config = self.config.borrow_mut();
+            config.width = size.width;
+            config.height = size.height;
+        }
+        self.surface.configure(&self.device, &self.config.borrow());
     }
 }
 
@@ -56,7 +66,7 @@ impl WgpuContext {
             adapter,
             device,
             queue,
-            config,
+            config: RefCell::new(config),
         }
     }
 }

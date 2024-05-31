@@ -1,45 +1,51 @@
 pub mod camera;
 pub mod pipeline;
 pub mod primitive;
+pub mod resource;
 pub mod scene;
 pub mod wgpu_context;
-// pub mod resource;
 
-use std::{cell::RefCell, sync::Arc};
+use std::sync::Arc;
 
 use camera::Camera;
-use pipeline::{CubePipeline, HelloTrianglePipeline, Pipeline};
+use pipeline::CubePipeline;
+use resource::Resource;
 use scene::Scene;
 use wgpu_context::WgpuContext;
 use winit::{dpi::PhysicalSize, window::Window};
 
-use primitive::{mesh::Mesh, CUBE_VERTEX, CUBE_VERTEX_INDEX};
-
 pub struct Renderer {
-    ctx: WgpuContext,
-    pub pipeline: RefCell<Box<dyn Pipeline>>,
+    ctx: Arc<WgpuContext>,
+    resource: Resource,
+    // pub pipeline: RefCell<Box<dyn Pipeline>>,
     scene: Scene,
 }
 
 impl Renderer {
     pub fn new(window: Arc<Window>) -> Self {
         let ctx = pollster::block_on(WgpuContext::new(window));
-        let pipeline = CubePipeline::new(&ctx);
+        let ctx = Arc::new(ctx);
+
+        let mut resource = Resource::new(ctx.clone());
+        resource.init();
+        // let pipeline = CubePipeline::new(&ctx);
         // let pipeline = HelloTrianglePipeline::new(&ctx);
         let mut scene = Scene::new();
-        scene.add_mesh(Mesh::new(&ctx, &CUBE_VERTEX, CUBE_VERTEX_INDEX));
+        scene.add_mesh("cube".to_string());
+
         Self {
             ctx,
-            pipeline: RefCell::new(Box::new(pipeline)),
+            resource,
+            // pipeline: RefCell::new(Box::new(pipeline)),
             scene,
         }
     }
 
     pub fn handle_resize(&mut self, mut size: PhysicalSize<u32>) {
+        println!("[core/renderer]: handle_resize: {size:?}");
         size.width = size.width.max(1);
         size.height = size.height.max(1);
-        println!("[core]: handle_resize: {size:?}");
-        self.ctx.update_size(size);
+        self.ctx.update_surface_size(size);
     }
 
     pub fn render(&self, camera: &Camera) {
@@ -48,9 +54,14 @@ impl Renderer {
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        self.pipeline
-            .borrow_mut()
-            .render(&self.ctx, &view, camera, &self.scene);
+
+        self.resource
+            .get_pipeline::<CubePipeline>()
+            .unwrap()
+            .render(&self.ctx, &view, camera, &self.scene, &self.resource);
+        // self.pipeline
+        //     .borrow_mut()
+        //     .render(&self.ctx, &view, camera, &self.scene);
         output.present();
     }
 }

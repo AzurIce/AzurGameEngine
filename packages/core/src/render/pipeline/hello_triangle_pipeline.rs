@@ -40,7 +40,7 @@ impl Pipeline for HelloTrianglePipeline {
                     module: &shader_module, // ? Shader modyle
                     entry_point: "fs_main",
                     targets: &[Some(wgpu::ColorTargetState {
-                        format: context.config.format,
+                        format: context.get_surface_format(),
                         blend: Some(wgpu::BlendState::REPLACE),
                         write_mask: wgpu::ColorWrites::ALL,
                     })],
@@ -68,11 +68,12 @@ impl Pipeline for HelloTrianglePipeline {
         Self { pipeline }
     }
     fn render(
-        &mut self,
+        &self,
         context: &WgpuContext,
         view: &wgpu::TextureView,
         _camera: &crate::render::camera::Camera,
         _scene: &crate::render::scene::Scene,
+        _resource: &crate::render::resource::Resource,
     ) {
         let mut encoder = context
             .device

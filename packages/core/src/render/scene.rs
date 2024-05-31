@@ -1,8 +1,6 @@
-use super::primitive::mesh::Mesh;
-
 #[derive(Default)]
 pub struct Scene {
-    meshes: Vec<Mesh>,
+    meshes: Vec<String>,
 }
 
 impl Scene {
@@ -10,11 +8,11 @@ impl Scene {
         Self { meshes: Vec::new() }
     }
 
-    pub fn meshes(&self) -> &Vec<Mesh> {
+    pub fn meshes(&self) -> &Vec<String> {
         &self.meshes
     }
 
-    pub fn add_mesh(&mut self, mesh: Mesh) {
+    pub fn add_mesh(&mut self, mesh: String) {
         self.meshes.push(mesh);
     }
 }

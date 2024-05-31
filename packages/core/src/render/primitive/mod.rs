@@ -1,6 +1,7 @@
 pub mod mesh;
 
 use bytemuck::{Pod, Zeroable};
+use wgpu::Buffer;
 
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -57,3 +58,14 @@ pub const CUBE_VERTEX_INDEX: &[u16] = &[
     16, 17, 18, 18, 19, 16, // front
     20, 21, 22, 22, 23, 20, // back
 ];
+
+// pub trait Render {
+//     fn vertex_data(&self) -> &[Vertex];
+//     fn index_data(&self) -> &[u16];
+// }
+
+pub trait Render {
+    fn vertex_buf(&self) -> &Buffer;
+    fn index_buf(&self) -> &Buffer;
+    fn vertex_cnt(&self) -> usize;
+}

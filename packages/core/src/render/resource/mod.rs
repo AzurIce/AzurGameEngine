@@ -1,33 +1,48 @@
-mod pipeline_resource;
-
-use std::{any::TypeId, collections::HashMap, sync::Arc};
-
-use pipeline_resource::{pipeline_resource, PipelineResource};
-use wgpu::RenderPipeline;
-
 use super::{
-    pipeline::{HelloTrianglePipeline, Pipeline},
+    pipeline::{CubePipeline, HelloTrianglePipeline, Pipeline},
+    primitive::{mesh::Mesh, Render, CUBE_VERTEX, CUBE_VERTEX_INDEX},
     wgpu_context::WgpuContext,
 };
+use std::{any::TypeId, collections::HashMap, sync::Arc};
 
-// pub enum Pipeline {
-//     HelloTrianglePipeline(HelloTrianglePipeline),
-// }
-
-#[derive(Default)]
+pub trait Reload {
+    fn reload(&mut self);
+}
 pub struct Resource {
-    pipelines: HashMap<TypeId, Box<dyn PipelineResource>>,
-    // pipeline:
+    context: Arc<WgpuContext>,
+    pipelines: HashMap<TypeId, Box<dyn Pipeline>>,
+    meshes: HashMap<String, Box<dyn Render>>,
 }
 
 impl Resource {
-    pub fn init(&mut self, context: Arc<WgpuContext>) {
+    pub fn new(context: Arc<WgpuContext>) -> Self {
+        Self {
+            context,
+            pipelines: HashMap::new(),
+            meshes: HashMap::new(),
+        }
+    }
+
+    pub fn init(&mut self) {
         self.pipelines.insert(
             TypeId::of::<HelloTrianglePipeline>(),
-            pipeline_resource::<HelloTrianglePipeline>(context),
+            Box::new(HelloTrianglePipeline::new(&self.context)),
+        );
+        self.pipelines.insert(
+            TypeId::of::<CubePipeline>(),
+            Box::new(CubePipeline::new(&self.context)),
+        );
+
+        self.meshes.insert(
+            "cube".to_string(),
+            Box::new(Mesh::new(&self.context, &CUBE_VERTEX, CUBE_VERTEX_INDEX)),
         );
     }
-    // pub fn get_pipeline<T: Pipeline>(&self) -> Box<dyn PipelineResource> {
-        // self.pipelines.get(&TypeId::of::<T>())
-    // }
+
+    pub fn get_pipeline<T: Pipeline + 'static>(&self) -> Option<&Box<dyn Pipeline>> {
+        self.pipelines.get(&TypeId::of::<T>())
+    }
+    pub fn get_mesh(&self, name: &str) -> Option<&Box<dyn Render>> {
+        self.meshes.get(name)
+    }
 }
