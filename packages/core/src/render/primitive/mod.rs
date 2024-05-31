@@ -1,4 +1,4 @@
-use std::f32::consts;
+pub mod mesh;
 
 use bytemuck::{Pod, Zeroable};
 
@@ -57,23 +57,3 @@ pub const CUBE_VERTEX_INDEX: &[u16] = &[
     16, 17, 18, 18, 19, 16, // front
     20, 21, 22, 22, 23, 20, // back
 ];
-
-
-pub struct Cube {
-    model_mat: glam::Mat4
-}
-
-impl Cube {
-    pub fn generate_matrix(aspect_ratio: f32) -> glam::Mat4 {
-        let projection = glam::Mat4::perspective_rh(consts::FRAC_PI_4, aspect_ratio, 1.0, 10.0);
-        let view = glam::Mat4::look_at_rh(
-            glam::Vec3::new(1.5f32, -5.0, 3.0),
-            glam::Vec3::ZERO,
-            glam::Vec3::Z,
-        );
-        projection * view
-    }
-    pub fn into_vbo() {
-
-    }
-}

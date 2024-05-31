@@ -4,13 +4,12 @@ use input::InputSystem;
 use render::{camera::Camera, Renderer};
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
-pub mod entity;
 pub mod input;
 pub mod render;
 pub mod runtime;
 
 pub struct Core {
-    renderer: render::Renderer,
+    renderer: Renderer,
     input_system: InputSystem,
     camera: Camera,
 }

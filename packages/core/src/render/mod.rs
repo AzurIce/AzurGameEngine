@@ -1,18 +1,24 @@
 pub mod pipeline;
 pub mod wgpu_context;
 pub mod camera;
+pub mod scene;
+pub mod primitive;
 // pub mod resource;
 
 use std::{cell::RefCell, sync::Arc};
 
 use camera::Camera;
 use pipeline::CubePipeline;
+use scene::Scene;
 use wgpu_context::WgpuContext;
 use winit::{dpi::PhysicalSize, window::Window};
+
+use primitive::{mesh::Mesh, CUBE_VERTEX, CUBE_VERTEX_INDEX};
 
 pub struct Renderer {
     ctx: WgpuContext,
     pub pipeline: RefCell<CubePipeline>,
+    scene: Scene
 }
 
 impl Renderer {
@@ -20,7 +26,9 @@ impl Renderer {
         let ctx = pollster::block_on(WgpuContext::new(window));
         let pipeline = CubePipeline::new(&ctx);
         let pipeline = RefCell::new(pipeline);
-        Self { ctx, pipeline }
+        let mut scene = Scene::new();
+        scene.add_mesh(Mesh::new(&ctx, &CUBE_VERTEX, &CUBE_VERTEX_INDEX));
+        Self { ctx, pipeline, scene }
     }
 
     pub fn handle_resize(&mut self, mut size: PhysicalSize<u32>) {
@@ -36,7 +44,7 @@ impl Renderer {
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        self.pipeline.borrow_mut().render(&self.ctx, &view, camera);
+        self.pipeline.borrow_mut().render(&self.ctx, &view, camera, &self.scene);
         output.present();
     }
 }
