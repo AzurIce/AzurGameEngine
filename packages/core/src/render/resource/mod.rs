@@ -11,7 +11,7 @@ pub trait Reload {
 pub struct Resource {
     context: Arc<WgpuContext>,
     pipelines: HashMap<TypeId, Box<dyn Pipeline>>,
-    meshes: HashMap<String, Box<dyn Render>>,
+    meshes: HashMap<String, Arc<dyn Render>>,
 }
 
 impl Resource {
@@ -35,14 +35,14 @@ impl Resource {
 
         self.meshes.insert(
             "cube".to_string(),
-            Box::new(Mesh::new(&self.context, &CUBE_VERTEX, CUBE_VERTEX_INDEX)),
+            Arc::new(Mesh::new(&self.context, &CUBE_VERTEX, CUBE_VERTEX_INDEX)),
         );
     }
 
     pub fn get_pipeline<T: Pipeline + 'static>(&self) -> Option<&dyn Pipeline> {
         self.pipelines.get(&TypeId::of::<T>()).map(|b| &**b)
     }
-    pub fn get_mesh(&self, name: &str) -> Option<&dyn Render> {
-        self.meshes.get(name).map(|b| &**b)
+    pub fn get_mesh(&self, name: &str) -> Option<Arc<dyn Render>> {
+        self.meshes.get(name).map(|m| m.clone())
     }
 }

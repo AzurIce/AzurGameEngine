@@ -1,6 +1,10 @@
+use std::sync::Arc;
+
+use super::primitive::Render;
+
 #[derive(Default)]
 pub struct Scene {
-    meshes: Vec<String>,
+    meshes: Vec<Arc<dyn Render>>,
 }
 
 impl Scene {
@@ -8,11 +12,11 @@ impl Scene {
         Self { meshes: Vec::new() }
     }
 
-    pub fn meshes(&self) -> &Vec<String> {
+    pub fn meshes(&self) -> &Vec<Arc<dyn Render>> {
         &self.meshes
     }
 
-    pub fn add_mesh(&mut self, mesh: String) {
+    pub fn add_mesh(&mut self, mesh: Arc<dyn Render>) {
         self.meshes.push(mesh);
     }
 }

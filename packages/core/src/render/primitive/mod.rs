@@ -1,4 +1,5 @@
 pub mod mesh;
+pub mod entity;
 
 use bytemuck::{Pod, Zeroable};
 use wgpu::Buffer;
@@ -68,4 +69,6 @@ pub trait Render {
     fn vertex_buf(&self) -> &Buffer;
     fn index_buf(&self) -> &Buffer;
     fn vertex_cnt(&self) -> usize;
+
+    fn model_matrix(&self) -> glam::Mat4;
 }

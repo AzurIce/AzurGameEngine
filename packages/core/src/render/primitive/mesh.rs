@@ -1,6 +1,6 @@
 use wgpu::{util::DeviceExt, Buffer};
 
-use crate::render::wgpu_context::WgpuContext;
+use crate::render::{resource::Resource, wgpu_context::WgpuContext};
 
 use super::{Render, Vertex};
 
@@ -44,5 +44,8 @@ impl Render for Mesh {
     }
     fn vertex_cnt(&self) -> usize {
         self.vertex_cnt
+    }
+    fn model_matrix(&self) -> glam::Mat4 {
+        glam::Mat4::from_scale(glam::Vec3::new(1.0, 1.0, 1.0))
     }
 }

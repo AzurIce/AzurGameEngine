@@ -9,6 +9,7 @@ use std::sync::Arc;
 
 use camera::Camera;
 use pipeline::CubePipeline;
+use primitive::entity::cube::Cube;
 use resource::Resource;
 use scene::Scene;
 use wgpu_context::WgpuContext;
@@ -31,7 +32,21 @@ impl Renderer {
         // let pipeline = CubePipeline::new(&ctx);
         // let pipeline = HelloTrianglePipeline::new(&ctx);
         let mut scene = Scene::new();
-        scene.add_mesh("cube".to_string());
+        scene.add_mesh(resource.get_mesh("cube").unwrap());
+        let cube = Cube::new(
+            &resource,
+            [3.0, 3.0, 3.0].into(),
+            [0.5, 1.0, 2.0].into(),
+            [1.0, 2.0, 3.0].into(),
+        );
+        scene.add_mesh(Arc::new(cube));
+        let cube = Cube::new(
+            &resource,
+            [3.0, 0.0, 3.0].into(),
+            [0.5, 0.0, 3.14].into(),
+            [1.0, 2.0, 3.0].into(),
+        );
+        scene.add_mesh(Arc::new(cube));
 
         Self {
             ctx,

@@ -1,5 +1,7 @@
 // use std::f32::consts;
 
+use std::sync::Arc;
+
 use wgpu::{
     BindGroup, BindGroupLayoutDescriptor, PipelineCompilationOptions, PipelineLayoutDescriptor,
     RenderPipeline,
@@ -38,7 +40,8 @@ pub struct CubePipeline {
 
     // vertex_buf: wgpu::Buffer,
     // index_buf: wgpu::Buffer,
-    uniform_buf: wgpu::Buffer,
+    ubuf_view_projection_mat: wgpu::Buffer,
+    ubuf_model_mat: wgpu::Buffer,
 }
 
 // fn generate_matrix(aspect_ratio: f32) -> glam::Mat4 {
@@ -72,6 +75,16 @@ impl Pipeline for CubePipeline {
                         },
                         wgpu::BindGroupLayoutEntry {
                             binding: 1,
+                            visibility: wgpu::ShaderStages::VERTEX,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Uniform,
+                                has_dynamic_offset: false,
+                                min_binding_size: wgpu::BufferSize::new(64),
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 2,
                             visibility: wgpu::ShaderStages::FRAGMENT,
                             ty: wgpu::BindingType::Texture {
                                 sample_type: wgpu::TextureSampleType::Uint,
@@ -126,10 +139,15 @@ impl Pipeline for CubePipeline {
         // let (w, h) = context.get_surface_size();
         // let mx_total = generate_matrix(w as f32 / h as f32);
         // let mx_ref: &[f32; 16] = mx_total.as_ref();
-        let uniform_buf = context.device.create_buffer(&wgpu::BufferDescriptor {
+        let ubuf_view_projection_mat = context.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Uniform Buffer"),
             size: 4 * 4 * std::mem::size_of::<f32>() as u64,
-            // contents: bytemuck::cast_slice(mx_ref),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let ubuf_model_mat = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Uniform Buffer"),
+            size: 4 * 4 * std::mem::size_of::<f32>() as u64,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -141,10 +159,14 @@ impl Pipeline for CubePipeline {
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
-                        resource: uniform_buf.as_entire_binding(),
+                        resource: ubuf_view_projection_mat.as_entire_binding(),
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
+                        resource: ubuf_model_mat.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
                         resource: wgpu::BindingResource::TextureView(&texture_view),
                     },
                 ],
@@ -210,9 +232,8 @@ impl Pipeline for CubePipeline {
         Self {
             pipeline,
             bind_group,
-            // vertex_buf,
-            // index_buf,
-            uniform_buf,
+            ubuf_view_projection_mat,
+            ubuf_model_mat,
         }
     }
 
@@ -229,12 +250,14 @@ impl Pipeline for CubePipeline {
             // Camera -> view_projection_mat
             let mx_total = camera.view_projection_mat();
             let mx_ref: &[f32; 16] = mx_total.as_ref();
-            context
-                .queue
-                .write_buffer(&self.uniform_buf, 0, bytemuck::cast_slice(mx_ref));
+            context.queue.write_buffer(
+                &self.ubuf_view_projection_mat,
+                0,
+                bytemuck::cast_slice(mx_ref),
+            );
         }
 
-        let render = |renderable: &dyn Render| {
+        let render = |renderable: &Arc<dyn Render>| {
             let mut encoder = context
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -245,12 +268,13 @@ impl Pipeline for CubePipeline {
                         view,
                         resolve_target: None,
                         ops: wgpu::Operations {
-                            load: wgpu::LoadOp::Clear(wgpu::Color {
-                                r: 0.1,
-                                g: 0.2,
-                                b: 0.3,
-                                a: 1.0,
-                            }),
+                            // load: wgpu::LoadOp::Clear(wgpu::Color {
+                            //     r: 0.1,
+                            //     g: 0.2,
+                            //     b: 0.3,
+                            //     a: 1.0,
+                            // }),
+                            load: wgpu::LoadOp::Load,
                             store: wgpu::StoreOp::Store,
                         },
                     })],
@@ -275,10 +299,14 @@ impl Pipeline for CubePipeline {
             context.queue.submit(Some(encoder.finish()));
         };
 
+        // println!("{:?} meshes", scene.meshes().len());
         for mesh in scene.meshes() {
-            if let Some(mesh) = resource.get_mesh(mesh) {
-                render(mesh);
-            }
+            let mx = mesh.model_matrix();
+            let mx_ref: &[f32; 16] = mx.as_ref();
+            context
+                .queue
+                .write_buffer(&self.ubuf_model_mat, 0, bytemuck::cast_slice(mx_ref));
+            render(mesh);
         }
     }
 }
