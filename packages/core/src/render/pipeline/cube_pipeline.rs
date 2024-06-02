@@ -10,7 +10,7 @@ use wgpu::{
 use super::Pipeline;
 use crate::render::{
     camera::Camera,
-    primitive::{Render, Vertex},
+    primitive::{Renderable, Vertex},
     resource::Resource,
     scene::Scene,
     wgpu_context::WgpuContext,
@@ -257,7 +257,7 @@ impl Pipeline for CubePipeline {
             );
         }
 
-        let render = |renderable: &Arc<dyn Render>| {
+        let render = |renderable: &Arc<dyn Renderable>| {
             let mut encoder = context
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -300,13 +300,13 @@ impl Pipeline for CubePipeline {
         };
 
         // println!("{:?} meshes", scene.meshes().len());
-        for mesh in scene.meshes() {
-            let mx = mesh.model_matrix();
+        for render_object in scene.render_objects() {
+            let mx = render_object.model_matrix();
             let mx_ref: &[f32; 16] = mx.as_ref();
             context
                 .queue
                 .write_buffer(&self.ubuf_model_mat, 0, bytemuck::cast_slice(mx_ref));
-            render(mesh);
+            render(render_object);
         }
     }
 }

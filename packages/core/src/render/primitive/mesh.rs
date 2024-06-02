@@ -2,7 +2,7 @@ use wgpu::{util::DeviceExt, Buffer};
 
 use crate::render::{resource::Resource, wgpu_context::WgpuContext};
 
-use super::{Render, Vertex};
+use super::{Renderable, Vertex};
 
 pub struct Mesh {
     vertex_cnt: usize,
@@ -35,7 +35,7 @@ impl Mesh {
     }
 }
 
-impl Render for Mesh {
+impl Renderable for Mesh {
     fn vertex_buf(&self) -> &Buffer {
         &self.vertex_buf
     }

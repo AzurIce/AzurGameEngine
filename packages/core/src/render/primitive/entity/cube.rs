@@ -1,50 +1,60 @@
-use std::sync::Arc;
+use crate::render::{primitive::{vertex, RenderData, Renderable, Vertex}, resource::Resource};
 
-use crate::render::{primitive::Render, resource::Resource};
+pub struct Cube;
 
-pub struct Cube {
-    mesh: Arc<dyn Render>,
-    position: glam::Vec3,
-    model: glam::Mat4,
+impl RenderData for Cube {
+    fn identifier() -> &'static str {
+        "cube"
+    }
+
+    fn vertex_data() -> &'static [crate::render::primitive::Vertex] {
+        &CUBE_VERTEX
+    }
+
+    fn index_data() -> &'static [u16] {
+        &CUBE_VERTEX_INDEX
+    }
+
 }
 
-impl Cube {
-    pub fn new(
-        resource: &Resource,
-        position: glam::Vec3,
-        rotation: glam::Vec3,
-        scale: glam::Vec3,
-    ) -> Self {
-        let scale_matrix = glam::Mat4::from_scale(scale);
+pub const CUBE_VERTEX: [Vertex; 24] = [
+    // top (0, 0, 1)
+    vertex([-1, -1, 1], [0, 0]),
+    vertex([1, -1, 1], [1, 0]),
+    vertex([1, 1, 1], [1, 1]),
+    vertex([-1, 1, 1], [0, 1]),
+    // bottom (0, 0, -1)
+    vertex([-1, 1, -1], [1, 0]),
+    vertex([1, 1, -1], [0, 0]),
+    vertex([1, -1, -1], [0, 1]),
+    vertex([-1, -1, -1], [1, 1]),
+    // right (1, 0, 0)
+    vertex([1, -1, -1], [0, 0]),
+    vertex([1, 1, -1], [1, 0]),
+    vertex([1, 1, 1], [1, 1]),
+    vertex([1, -1, 1], [0, 1]),
+    // left (-1, 0, 0)
+    vertex([-1, -1, 1], [1, 0]),
+    vertex([-1, 1, 1], [0, 0]),
+    vertex([-1, 1, -1], [0, 1]),
+    vertex([-1, -1, -1], [1, 1]),
+    // front (0, 1, 0)
+    vertex([1, 1, -1], [1, 0]),
+    vertex([-1, 1, -1], [0, 0]),
+    vertex([-1, 1, 1], [0, 1]),
+    vertex([1, 1, 1], [1, 1]),
+    // back (0, -1, 0)
+    vertex([1, -1, 1], [0, 0]),
+    vertex([-1, -1, 1], [1, 0]),
+    vertex([-1, -1, -1], [1, 1]),
+    vertex([1, -1, -1], [0, 1]),
+];
 
-        let rotation_matrix_x = glam::Mat4::from_rotation_x(rotation.x);
-        let rotation_matrix_y = glam::Mat4::from_rotation_y(rotation.y);
-        let rotation_matrix_z = glam::Mat4::from_rotation_z(rotation.z);
-        let rotation_matrix = rotation_matrix_z * rotation_matrix_y * rotation_matrix_x;
-
-        let translation_matrix = glam::Mat4::from_translation(position);
-
-        let model = translation_matrix * rotation_matrix * scale_matrix;
-        Self {
-            mesh: resource.get_mesh("cube").unwrap(),
-            position,
-            model,
-        }
-    }
-}
-
-impl Render for Cube {
-    fn model_matrix(&self) -> glam::Mat4 {
-        self.model
-    }
-
-    fn vertex_buf(&self) -> &wgpu::Buffer {
-        self.mesh.vertex_buf()
-    }
-    fn index_buf(&self) -> &wgpu::Buffer {
-        self.mesh.index_buf()
-    }
-    fn vertex_cnt(&self) -> usize {
-        self.mesh.vertex_cnt()
-    }
-}
+pub const CUBE_VERTEX_INDEX: &[u16] = &[
+    0, 1, 2, 2, 3, 0, // top
+    4, 5, 6, 6, 7, 4, // bottom
+    8, 9, 10, 10, 11, 8, // right
+    12, 13, 14, 14, 15, 12, // left
+    16, 17, 18, 18, 19, 16, // front
+    20, 21, 22, 22, 23, 20, // back
+];
